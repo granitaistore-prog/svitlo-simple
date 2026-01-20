@@ -10,7 +10,7 @@ async function loadStreetsData() {
         }
         
         // Завантажуємо GeoJSON з вулицями
-        const response = await fetch('baranivka-streets.json');
+        const response = await fetch('./baranivka-streets.json');
         
         if (!response.ok) {
             throw new Error(`Помилка завантаження: ${response.status} ${response.statusText}`);
@@ -39,9 +39,17 @@ async function loadStreetsData() {
     } catch (error) {
         console.error('Помилка завантаження даних вулиць:', error);
         
-        // Показуємо помилку користувачу
-        if (typeof showErrorMessage === 'function') {
-            showErrorMessage('Помилка завантаження даних вулиць: ' + error.message);
+        // Показуємо помилку в панелі інформації
+        const infoContent = document.querySelector('.info-content');
+        if (infoContent) {
+            infoContent.innerHTML = `
+                <div class="error-message">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h4>Помилка завантаження</h4>
+                    <p>${error.message}</p>
+                    <p>Перевірте консоль для деталей</p>
+                </div>
+            `;
         }
         
         // Приховуємо індикатор завантаження
