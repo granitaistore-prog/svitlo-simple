@@ -13,7 +13,14 @@ async function getStreetInfo(streetName) {
         
         // Для вулиць використовуємо будь-який номер будинку (наприклад, 1)
         const response = await fetch(
-            `${API_BASE_URL}?city=Баранівка&street=${encodeURIComponent(streetName)}&house=1`
+            `${API_BASE_URL}?city=Баранівка&street=${encodeURIComponent(streetName)}&house=1`,
+            {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                },
+                mode: 'cors' // Додаємо для CORS запитів
+            }
         );
         
         if (!response.ok) {
@@ -27,11 +34,11 @@ async function getStreetInfo(streetName) {
         const statusMap = {
             'POWER_ON': 'Світло є',
             'NO_POWER': 'Немає світла',
-            'UNKNOWN': 'За графіком'
+            'UNKNOWN': 'Невідомо'
         };
         
         // Отримуємо графік для черги
-        const scheduleText = getScheduleForQueue(data.queue);
+        const scheduleText = getScheduleForQueue(data.queue || '1');
         
         return {
             success: true,
@@ -115,31 +122,38 @@ function getMockStreetData(streetName) {
 async function showStreetInfo(feature) {
     if (!feature || !feature.properties) {
         console.error('Немає даних про вулицю');
+        showErrorMessage('Немає даних про обрану вулицю');
         return;
     }
     
     // Отримуємо назву вулиці для запиту
     let streetNameForApi = feature.properties.originalName || feature.properties.name;
     
-    if (!streetNameForApi) {
+    if (!streetNameForApi || streetNameForApi === 'Невідома вулиця') {
         console.error('Немає назви вулиці');
+        showErrorMessage('Не вдалося отримати назву вулиці');
         return;
     }
     
     // Очищуємо назву від мовних тегів
     streetNameForApi = cleanStreetName(streetNameForApi);
     
-    const result = await getStreetInfo(streetNameForApi);
-    const info = result.data;
-    
-    // Використовуємо відформатовану назву для відображення
-    const displayName = feature.properties.displayName || info.street;
-    
-    // Оновлюємо панель інформації
-    updateInfoPanel(displayName, info, result.success);
-    
-    // Оновлюємо статус вулиці на карті
-    updateStreetStatusOnMap(feature, info.rawStatus);
+    try {
+        const result = await getStreetInfo(streetNameForApi);
+        const info = result.data;
+        
+        // Використовуємо відформатовану назву для відображення
+        const displayName = feature.properties.displayName || info.street;
+        
+        // Оновлюємо панель інформації
+        updateInfoPanel(displayName, info, result.success);
+        
+        // Оновлюємо статус вулиці на карті
+        updateStreetStatusOnMap(feature, info.rawStatus);
+    } catch (error) {
+        console.error('Помилка при обробці інформації про вулицю:', error);
+        showErrorMessage('Помилка при отриманні інформації про вулицю: ' + error.message);
+    }
 }
 
 // Очистити назву вулиці від мовних тегів
@@ -198,7 +212,8 @@ function updateInfoPanel(streetName, info, isSuccess) {
         ${!isSuccess ? `
         <div class="warning-message">
             <i class="fas fa-exclamation-circle"></i>
-            Використовуються демонстраційні дані
+            <strong>Увага:</strong> Використовуються демонстраційні дані
+            <p style="margin-top: 5px; font-size: 0.9em;">API тимчасово недоступне</p>
         </div>
         ` : ''}
         
@@ -253,10 +268,15 @@ function updateStreetStatusOnMap(feature, status) {
     // Отримуємо шар вулиць з глобальної змінної
     const streetsLayer = window.streetsLayer;
     
-    if (!streetsLayer || !status) return;
+    if (!streetsLayer || !status) {
+        console.warn('Не вдалося оновити статус вулиці: відсутній шар або статус');
+        return;
+    }
     
     // Оновлюємо властивість вулиці
-    feature.properties.status = status;
+    if (feature && feature.properties) {
+        feature.properties.status = status;
+    }
     
     // Знаходимо відповідний шар і оновлюємо його стиль
     streetsLayer.eachLayer(function(layer) {
@@ -270,7 +290,7 @@ function updateStreetStatusOnMap(feature, status) {
             // Якщо вулиця виділена, додаємо особливий стиль
             if (layer.isSelected) {
                 layer.setStyle({
-                    weight: 7,
+                    weight: 8,
                     opacity: 1,
                     color: '#1a237e',
                     dashArray: null
@@ -288,11 +308,29 @@ function showLoading(show) {
     }
 }
 
+// Показати повідомлення про помилку
+function showErrorMessage(message) {
+    const infoContent = document.querySelector('.info-content');
+    if (infoContent) {
+        infoContent.innerHTML = `
+            <div class="error-message">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h4>Помилка</h4>
+                <p>${message}</p>
+            </div>
+        `;
+    }
+}
+
 // Закрити панель інформації
 function initCloseButton() {
     const closeBtn = document.getElementById('closeBtn');
     if (closeBtn) {
-        closeBtn.addEventListener('click', function() {
+        // Видаляємо старі обробники подій
+        closeBtn.replaceWith(closeBtn.cloneNode(true));
+        const newCloseBtn = document.getElementById('closeBtn');
+        
+        newCloseBtn.addEventListener('click', function() {
             const infoContent = document.querySelector('.info-content');
             if (infoContent) {
                 infoContent.innerHTML = '<p class="placeholder">Оберіть вулицю на карті</p>';
@@ -304,24 +342,33 @@ function initCloseButton() {
             
             if (streetsLayer && getStreetStyle) {
                 streetsLayer.eachLayer(function(layer) {
-                    layer.isSelected = false;
-                    const status = layer.feature?.properties?.status || 'UNKNOWN';
-                    layer.setStyle(getStreetStyle(layer.feature));
+                    if (layer.isSelected) {
+                        layer.isSelected = false;
+                        const status = layer.feature?.properties?.status || 'UNKNOWN';
+                        layer.setStyle(getStreetStyle(layer.feature));
+                    }
                 });
             }
         });
+        
+        console.log('Кнопка закриття ініціалізована');
+    } else {
+        console.warn('Кнопка закриття не знайдена');
     }
 }
 
 // Ініціалізація API модуля
 function initApi() {
     console.log('API модуль ініціалізовано');
-    initCloseButton();
     
-    // Отримуємо посилання на функції з map.js
-    console.log('Перевірка глобальних змінних:');
-    console.log('window.streetsLayer:', window.streetsLayer);
-    console.log('window.getStreetStyle:', window.getStreetStyle);
+    // Затримка для гарантії завантаження карти
+    setTimeout(() => {
+        console.log('Перевірка глобальних змінних:');
+        console.log('window.streetsLayer:', window.streetsLayer ? 'Так' : 'Ні');
+        console.log('window.getStreetStyle:', window.getStreetStyle ? 'Функція доступна' : 'Функція недоступна');
+        
+        initCloseButton();
+    }, 500);
 }
 
 // Експортуємо функції для використання в map.js
@@ -329,6 +376,7 @@ if (typeof window !== 'undefined') {
     window.showStreetInfo = showStreetInfo;
     window.showLoading = showLoading;
     window.updateStreetStatusOnMap = updateStreetStatusOnMap;
+    window.showErrorMessage = showErrorMessage;
 }
 
 // Ініціалізація після завантаження DOM
