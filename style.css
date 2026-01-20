@@ -527,3 +527,40 @@ footer i {
     padding: 40px 0;
     font-size: 1.1rem;
 }
+/* Додайте ці стилі для відлагодження */
+.debug-styles {
+    background-color: red !important;
+    opacity: 1 !important;
+    weight: 5 !important;
+}
+
+/* Для перевірки видимості карти */
+#map {
+    background-color: #f0f0f0 !important;
+    min-height: 500px;
+}
+
+/* Стилі для відлагодження вулиць */
+.street-has-power {
+    color: #4CAF50;
+    weight: 4;
+    opacity: 0.9;
+}
+
+.street-no-power {
+    color: #F44336;
+    weight: 5;
+    opacity: 0.9;
+}
+
+.street-scheduled {
+    color: #FFC107;
+    weight: 4;
+    opacity: 0.9;
+}
+
+.street-unknown {
+    color: #9E9E9E;
+    weight: 4;
+    opacity: 0.9;
+}
