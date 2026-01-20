@@ -1,14 +1,18 @@
 // Завантажити дані вулиць Баранівки
 async function loadStreetsData() {
+    console.log('Завантаження даних вулиць...');
+    
     try {
-        showLoading(true);
-        console.log('Початок завантаження даних вулиць...');
+        // Показуємо завантаження
+        if (typeof showLoading === 'function') {
+            showLoading(true);
+        }
         
         // Завантажуємо GeoJSON з вулицями
         const response = await fetch('data/baranivka-streets.json');
         
         if (!response.ok) {
-            throw new Error(`Помилка завантаження: ${response.status}`);
+            throw new Error(`Помилка завантаження: ${response.status} ${response.statusText}`);
         }
         
         const geojsonData = await response.json();
@@ -20,25 +24,16 @@ async function loadStreetsData() {
         
         console.log(`Завантажено ${geojsonData.features.length} вулиць`);
         
-        // Додаємо статус UNKNOWN до всіх вулиць (якщо його немає)
-        geojsonData.features.forEach(feature => {
-            if (feature.properties && !feature.properties.status) {
-                feature.properties.status = 'UNKNOWN';
-            }
-        });
-        
         // Додаємо вулиці на карту
         if (typeof loadStreetsToMap === 'function') {
             loadStreetsToMap(geojsonData);
         } else {
             console.error('Функція loadStreetsToMap не знайдена');
+            throw new Error('Функція завантаження на карту не доступна');
         }
-        
-        showLoading(false);
         
     } catch (error) {
         console.error('Помилка завантаження даних вулиць:', error);
-        showLoading(false);
         
         // Показуємо помилку користувачу
         const infoContent = document.querySelector('.info-content');
@@ -48,9 +43,17 @@ async function loadStreetsData() {
                     <i class="fas fa-exclamation-triangle"></i>
                     <h4>Помилка завантаження даних</h4>
                     <p>${error.message}</p>
-                    <p>Перевірте файл data/baranivka-streets.json</p>
+                    <p>Перевірте консоль для деталей</p>
                 </div>
             `;
         }
+        
+        // Приховуємо індикатор завантаження
+        if (typeof showLoading === 'function') {
+            showLoading(false);
+        }
     }
 }
+
+// Робимо функцію глобально доступною
+window.loadStreetsData = loadStreetsData;
