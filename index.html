@@ -67,9 +67,30 @@
         </footer>
     </div>
 
+    <!-- Важливо: Leaflet.js першим -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Потім наші скрипти в правильному порядку -->
     <script src="js/map.js"></script>
     <script src="js/api.js"></script>
     <script src="js/streets.js"></script>
+    
+    <!-- Скрипт для ініціалізації -->
+    <script>
+        // Чекаємо повного завантаження сторінки
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM завантажено, запускаємо ініціалізацію...');
+            
+            // Даємо час для завантаження всіх скриптів
+            setTimeout(function() {
+                if (typeof initMap === 'function') {
+                    console.log('Функція initMap знайдена, запускаємо...');
+                    initMap();
+                } else {
+                    console.error('Функція initMap не знайдена!');
+                }
+            }, 100);
+        });
+    </script>
 </body>
 </html>
