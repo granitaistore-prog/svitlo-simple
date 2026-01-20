@@ -9,29 +9,29 @@ function getStreetStyle(feature) {
     const styles = {
         'POWER_ON': {
             color: '#4CAF50',
-            weight: 4,
-            opacity: 0.8,
+            weight: 5,  // Збільшено для кращої видимості
+            opacity: 0.9,
             dashArray: null
         },
         'NO_POWER': {
             color: '#F44336',
-            weight: 5,
+            weight: 6,  // Збільшено для кращої видимості
             opacity: 0.9,
             dashArray: null
         },
         'UNKNOWN': {
             color: '#FFC107',
-            weight: 4,
-            opacity: 0.7,
-            dashArray: '5, 5'
+            weight: 5,  // Збільшено для кращої видимості
+            opacity: 0.9,
+            dashArray: null
         }
     };
     
     return styles[status] || {
         color: '#9E9E9E',
-        weight: 3,
-        opacity: 0.6,
-        dashArray: '3, 3'
+        weight: 4,
+        opacity: 0.9,
+        dashArray: null
     };
 }
 
@@ -46,7 +46,12 @@ function initMap() {
             throw new Error('Контейнер карти не знайдено!');
         }
         
-        // Центр Баранівки
+        // Перевірка Leaflet
+        if (typeof L === 'undefined') {
+            throw new Error('Leaflet не завантажений!');
+        }
+        
+        // Центр Баранівки - більш точні координати
         const baranivkaCenter = [50.297, 27.662];
         
         // Ініціалізація карти
@@ -62,6 +67,7 @@ function initMap() {
         L.control.scale().addTo(map);
         
         console.log('Карта успішно ініціалізована');
+        console.log('Розмір контейнера:', mapContainer.offsetWidth, 'x', mapContainer.offsetHeight);
         
         // Створюємо шар для вулиць
         streetsLayer = L.geoJSON(null, {
@@ -119,11 +125,17 @@ function onEachStreetFeature(feature, layer) {
     // Форматуємо назву вулиці
     const streetName = formatStreetName(feature.properties.name) || 'Невідома вулиця';
     feature.properties.displayName = streetName;
+    feature.properties.originalName = feature.properties.name; // Зберігаємо оригінальну назву для API
+    
+    // Додаємо властивість статусу, якщо її немає
+    if (!feature.properties.status) {
+        feature.properties.status = 'UNKNOWN';
+    }
     
     layer.on({
         mouseover: function(e) {
             this.setStyle({
-                weight: 6,
+                weight: 7,
                 opacity: 1
             });
             
@@ -153,7 +165,7 @@ function onEachStreetFeature(feature, layer) {
             // Виділяємо обрану вулицю
             this.isSelected = true;
             this.setStyle({
-                weight: 7,
+                weight: 8,
                 opacity: 1,
                 color: '#1a237e',
                 dashArray: null
@@ -174,8 +186,15 @@ function loadStreetsToMap(geojsonData) {
         return false;
     }
     
-    if (geojsonData && geojsonData.features && geojsonData.features.length > 0) {
+    if (geojsonData && geojsonData.features && Array.isArray(geojsonData.features)) {
         console.log(`Додаємо ${geojsonData.features.length} вулиць на карту...`);
+        
+        // Перевірка перших координат
+        if (geojsonData.features.length > 0) {
+            console.log('Приклад координат першої вулиці:');
+            console.log('Перша точка:', geojsonData.features[0].geometry.coordinates[0]);
+            console.log('Назва:', geojsonData.features[0].properties.name);
+        }
         
         // Додаємо статус UNKNOWN до всіх вулиць (якщо його немає)
         geojsonData.features.forEach(feature => {
@@ -188,15 +207,27 @@ function loadStreetsToMap(geojsonData) {
         streetsLayer.addData(geojsonData);
         
         // Автоматично масштабуємо карту до вулиць
-        const bounds = streetsLayer.getBounds();
-        if (bounds.isValid()) {
-            map.fitBounds(bounds, { 
-                padding: [50, 50], 
-                maxZoom: 15 
-            });
-        }
+        setTimeout(() => {
+            const bounds = streetsLayer.getBounds();
+            if (bounds.isValid()) {
+                console.log('Межі вулиць:', bounds);
+                map.fitBounds(bounds, { 
+                    padding: [50, 50], 
+                    maxZoom: 15 
+                });
+            } else {
+                console.warn('Невірні межі вулиць, використовуємо центр Баранівки');
+                map.setView([50.297, 27.662], 14);
+            }
+        }, 100);
         
         console.log(`Успішно додано ${geojsonData.features.length} вулиць`);
+        
+        // Оновлюємо розмір карти
+        setTimeout(() => {
+            map.invalidateSize();
+            console.log('Карта оновлена');
+        }, 500);
         
         // Приховуємо індикатор завантаження
         const loadingEl = document.getElementById('loading');
@@ -243,3 +274,15 @@ window.initMap = initMap;
 window.loadStreetsToMap = loadStreetsToMap;
 window.formatStreetName = formatStreetName;
 window.showErrorMessage = showErrorMessage;
+
+// Додаткова перевірка після завантаження
+window.addEventListener('load', function() {
+    console.log('Сторінка повністю завантажена');
+    
+    // Оновлюємо розмір карти
+    if (map) {
+        setTimeout(() => {
+            map.invalidateSize();
+        }, 1000);
+    }
+});
