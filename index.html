@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Карта відключень Баранівки</title>
+    <title>Карта відключень Баранівки - Статус вулиць</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -12,6 +12,8 @@
     <div class="container">
         <header>
             <h1><i class="fas fa-lightbulb"></i> Карта відключень Баранівки</h1>
+            <div class="subtitle">Статус електропостачання по вулицях</div>
+            
             <div class="status-legend">
                 <div class="legend-item">
                     <span class="status-dot status-green"></span> Світло є
@@ -21,6 +23,21 @@
                 </div>
                 <div class="legend-item">
                     <span class="status-dot status-red"></span> Немає світла
+                </div>
+                <div class="legend-item">
+                    <span class="status-dot status-gray"></span> Невідомо
+                </div>
+            </div>
+            
+            <div class="city-info">
+                <div class="info-badge">
+                    <i class="fas fa-city"></i> Баранівка
+                </div>
+                <div class="info-badge">
+                    <i class="fas fa-bolt"></i> Черга 1
+                </div>
+                <div class="info-badge">
+                    <i class="fas fa-clock"></i> Графік: 00:00-04:00, 12:00-16:00
                 </div>
             </div>
         </header>
@@ -35,24 +52,24 @@
 
             <div class="info-panel" id="infoPanel">
                 <div class="info-header">
-                    <h3><i class="fas fa-home"></i> Інформація про будинок</h3>
+                    <h3><i class="fas fa-road"></i> Інформація про вулицю</h3>
                     <button class="close-btn" id="closeBtn">&times;</button>
                 </div>
                 <div class="info-content">
-                    <p>Оберіть будинок на карті</p>
+                    <p class="placeholder">Оберіть вулицю на карті</p>
                 </div>
             </div>
         </main>
 
         <footer>
-            <p><i class="fas fa-info-circle"></i> Баранівка - Черга 1 | Графік: 00:00-04:00, 12:00-16:00</p>
-            <p>Дані оновлюються автоматично</p>
+            <p><i class="fas fa-map-marker-alt"></i> Баранівка, Житомирська область</p>
+            <p><i class="fas fa-info-circle"></i> Дані оновлюються автоматично кожні 15 хвилин</p>
         </footer>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="js/map.js"></script>
     <script src="js/api.js"></script>
-    <script src="js/buildings.js"></script>
+    <script src="js/streets.js"></script>
 </body>
 </html>
