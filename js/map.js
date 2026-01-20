@@ -142,3 +142,90 @@ function loadStreetsToMap(geojsonData) {
 
 // Ініціалізуємо карту
 document.addEventListener('DOMContentLoaded', initMap);
+// Функція для обробки назв вулиць
+function formatStreetName(name) {
+    if (!name) return 'Невідома вулиця';
+    
+    // Видаляємо зайві префікси
+    let formatted = name;
+    
+    // Замінюємо "вулиця" на початок
+    if (formatted.includes('вулиця')) {
+        formatted = formatted.replace('вулиця', '').trim();
+    }
+    
+    // Замінюємо інші мовні варіанти
+    const replacements = {
+        'ulica': '',
+        'Street': '',
+        'strasse': '',
+        'name:ru:': '',
+        'name:uk:': '',
+        'name:pl:': '',
+        'name:en:': ''
+    };
+    
+    Object.keys(replacements).forEach(key => {
+        if (formatted.includes(key)) {
+            formatted = formatted.replace(key, '').trim();
+        }
+    });
+    
+    return formatted || name;
+}
+
+// Оновіть функцію onEachStreetFeature, замініть цей блок:
+function onEachStreetFeature(feature, layer) {
+    if (!feature.properties) return;
+    
+    // Форматуємо назву вулиці
+    const streetName = formatStreetName(feature.properties.name) || 'Невідома вулиця';
+    
+    // Зберігаємо оригінальну назву для API запитів
+    if (!feature.properties.originalName && feature.properties.name) {
+        feature.properties.originalName = feature.properties.name;
+    }
+    feature.properties.displayName = streetName;
+    
+    layer.on({
+        mouseover: function(e) {
+            this.setStyle({
+                weight: 6,
+                opacity: 1
+            });
+            
+            layer.bindTooltip(`<b>${streetName}</b>`, {
+                direction: 'top',
+                className: 'street-tooltip',
+                permanent: false,
+                sticky: true
+            }).openTooltip();
+        },
+        mouseout: function(e) {
+            if (!layer.isSelected) {
+                const status = feature.properties.status || 'unknown';
+                this.setStyle(getStreetStyle(status));
+            }
+            layer.closeTooltip();
+        },
+        click: function(e) {
+            // Скидаємо виділення всіх вулиць
+            streetsLayer.eachLayer(function(streetLayer) {
+                streetLayer.isSelected = false;
+                const status = streetLayer.feature.properties.status || 'unknown';
+                streetLayer.setStyle(getStreetStyle(status));
+            });
+            
+            // Виділяємо обрану вулицю
+            this.isSelected = true;
+            this.setStyle({
+                weight: 7,
+                opacity: 1,
+                color: '#1a237e'
+            });
+            
+            // Показуємо інформацію про вулицю
+            showStreetInfo(feature);
+        }
+    });
+}
