@@ -1,0 +1,53 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "addr:street": "Симона Петлюри",
+        "addr:housenumber": "25",
+        "id": "building_1"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [27.661, 50.296], [27.6612, 50.296],
+          [27.6612, 50.2958], [27.661, 50.2958],
+          [27.661, 50.296]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "addr:street": "Володимирська",
+        "addr:housenumber": "15",
+        "id": "building_2"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [27.662, 50.297], [27.6622, 50.297],
+          [27.6622, 50.2968], [27.662, 50.2968],
+          [27.662, 50.297]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "addr:street": "Соборна",
+        "addr:housenumber": "8",
+        "id": "building_3"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [27.663, 50.298], [27.6632, 50.298],
+          [27.6632, 50.2978], [27.663, 50.2978],
+          [27.663, 50.298]
+        ]]
+      }
+    }
+  ]
+}
