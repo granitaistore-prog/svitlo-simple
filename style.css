@@ -387,3 +387,143 @@ footer i {
     padding-bottom: 15px;
     border-bottom: 2px solid #eee;
 }
+/* Додаткові стилі для API модуля */
+.warning-message {
+    background: #FFF3CD;
+    border: 1px solid #FFC107;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 15px;
+    color: #856404;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+}
+
+.schedule {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-top: 5px;
+}
+
+.schedule div {
+    background: #f8f9fa;
+    padding: 5px 10px;
+    border-radius: 4px;
+    border-left: 3px solid #667eea;
+    font-family: monospace;
+}
+
+.highlight {
+    background-color: #E3F2FD;
+    color: #1565C0;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: bold;
+    display: inline-block;
+    min-width: 40px;
+    text-align: center;
+}
+
+/* Статус індикатори */
+.status-indicator {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: bold;
+    margin: 5px 0;
+    color: white;
+    text-align: center;
+    min-width: 140px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.status-on { 
+    background: linear-gradient(90deg, #4CAF50, #45a049);
+    animation: pulse-green 2s infinite;
+}
+
+.status-off { 
+    background: linear-gradient(90deg, #F44336, #d32f2f);
+    animation: pulse-red 2s infinite;
+}
+
+.status-unknown { 
+    background: linear-gradient(90deg, #FFC107, #ffb300);
+}
+
+.status-scheduled { 
+    background: linear-gradient(90deg, #2196F3, #1976d2);
+}
+
+/* Анімації для статусів */
+@keyframes pulse-green {
+    0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(76, 175, 80, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+}
+
+@keyframes pulse-red {
+    0% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(244, 67, 54, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0); }
+}
+
+/* Інформаційна панель */
+.info-item {
+    margin-bottom: 15px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #667eea;
+    transition: all 0.3s ease;
+}
+
+.info-item:hover {
+    background: #e3f2fd;
+    transform: translateX(5px);
+}
+
+.info-item strong {
+    color: #1a237e;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+}
+
+.street-name {
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: #1a237e;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #eee;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.info-note {
+    background: #E8F5E9;
+    border: 1px solid #4CAF50;
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 20px;
+    font-size: 0.9rem;
+    color: #2E7D32;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.placeholder {
+    text-align: center;
+    color: #666;
+    font-style: italic;
+    padding: 40px 0;
+    font-size: 1.1rem;
+}
