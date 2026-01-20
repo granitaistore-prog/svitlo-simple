@@ -20,6 +20,13 @@ async function loadStreetsData() {
         
         console.log(`Завантажено ${geojsonData.features.length} вулиць`);
         
+        // Додаємо статус UNKNOWN до всіх вулиць (якщо його немає)
+        geojsonData.features.forEach(feature => {
+            if (feature.properties && !feature.properties.status) {
+                feature.properties.status = 'UNKNOWN';
+            }
+        });
+        
         // Додаємо вулиці на карту
         if (typeof loadStreetsToMap === 'function') {
             loadStreetsToMap(geojsonData);
@@ -45,95 +52,5 @@ async function loadStreetsData() {
                 </div>
             `;
         }
-        
-        // Завантажуємо тестові дані
-        loadTestStreetsData();
-    }
-}
-
-// Завантажити тестові дані, якщо основні недоступні
-function loadTestStreetsData() {
-    const testData = {
-        "type": "FeatureCollection",
-        "features": [
-            {
-                "type": "Feature",
-                "properties": {
-                    "name": "Симона Петлюри",
-                    "status": "UNKNOWN"
-                },
-                "geometry": {
-                    "type": "LineString",
-                    "coordinates": [
-                        [27.658, 50.299],
-                        [27.664, 50.299],
-                        [27.664, 50.295],
-                        [27.658, 50.295]
-                    ]
-                }
-            },
-            {
-                "type": "Feature",
-                "properties": {
-                    "name": "Володимирська",
-                    "status": "UNKNOWN"
-                },
-                "geometry": {
-                    "type": "LineString",
-                    "coordinates": [
-                        [27.660, 50.300],
-                        [27.662, 50.298],
-                        [27.662, 50.294]
-                    ]
-                }
-            },
-            {
-                "type": "Feature",
-                "properties": {
-                    "name": "Соборна",
-                    "status": "UNKNOWN"
-                },
-                "geometry": {
-                    "type": "LineString",
-                    "coordinates": [
-                        [27.656, 50.298],
-                        [27.666, 50.298]
-                    ]
-                }
-            },
-            {
-                "type": "Feature",
-                "properties": {
-                    "name": "Шевченка",
-                    "status": "UNKNOWN"
-                },
-                "geometry": {
-                    "type": "LineString",
-                    "coordinates": [
-                        [27.659, 50.301],
-                        [27.659, 50.293]
-                    ]
-                }
-            },
-            {
-                "type": "Feature",
-                "properties": {
-                    "name": "Лесі Українки",
-                    "status": "UNKNOWN"
-                },
-                "geometry": {
-                    "type": "LineString",
-                    "coordinates": [
-                        [27.655, 50.296],
-                        [27.665, 50.296]
-                    ]
-                }
-            }
-        ]
-    };
-    
-    console.log('Використовуються тестові дані вулиць');
-    if (typeof loadStreetsToMap === 'function') {
-        loadStreetsToMap(testData);
     }
 }
