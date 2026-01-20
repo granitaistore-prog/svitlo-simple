@@ -1,3 +1,5 @@
+// API модуль для отримання інформації про вулиці
+
 // Ваш API endpoint
 const API_BASE_URL = 'https://svitlo-ye-api.granit-ai-store.workers.dev';
 
@@ -248,6 +250,9 @@ function updateInfoPanel(streetName, info, isSuccess) {
 
 // Оновити статус вулиці на карті
 function updateStreetStatusOnMap(feature, status) {
+    // Отримуємо шар вулиць з глобальної змінної
+    const streetsLayer = window.streetsLayer;
+    
     if (!streetsLayer || !status) return;
     
     // Оновлюємо властивість вулиці
@@ -256,7 +261,11 @@ function updateStreetStatusOnMap(feature, status) {
     // Знаходимо відповідний шар і оновлюємо його стиль
     streetsLayer.eachLayer(function(layer) {
         if (layer.feature === feature) {
-            layer.setStyle(getStreetStyle(status));
+            // Отримуємо функцію стилю з глобальної змінної
+            const getStreetStyle = window.getStreetStyle;
+            if (getStreetStyle) {
+                layer.setStyle(getStreetStyle(feature));
+            }
             
             // Якщо вулиця виділена, додаємо особливий стиль
             if (layer.isSelected) {
@@ -280,7 +289,7 @@ function showLoading(show) {
 }
 
 // Закрити панель інформації
-document.addEventListener('DOMContentLoaded', function() {
+function initCloseButton() {
     const closeBtn = document.getElementById('closeBtn');
     if (closeBtn) {
         closeBtn.addEventListener('click', function() {
@@ -290,25 +299,36 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Скидаємо виділення вулиць
-            if (streetsLayer) {
+            const streetsLayer = window.streetsLayer;
+            const getStreetStyle = window.getStreetStyle;
+            
+            if (streetsLayer && getStreetStyle) {
                 streetsLayer.eachLayer(function(layer) {
                     layer.isSelected = false;
                     const status = layer.feature?.properties?.status || 'UNKNOWN';
-                    layer.setStyle(getStreetStyle(status));
+                    layer.setStyle(getStreetStyle(layer.feature));
                 });
             }
         });
     }
-});
+}
 
-// Глобальні змінні (будуть заповнені map.js)
-let streetsLayer;
-let getStreetStyle;
+// Ініціалізація API модуля
+function initApi() {
+    console.log('API модуль ініціалізовано');
+    initCloseButton();
+    
+    // Отримуємо посилання на функції з map.js
+    console.log('Перевірка глобальних змінних:');
+    console.log('window.streetsLayer:', window.streetsLayer);
+    console.log('window.getStreetStyle:', window.getStreetStyle);
+}
 
 // Експортуємо функції для використання в map.js
 if (typeof window !== 'undefined') {
     window.showStreetInfo = showStreetInfo;
     window.showLoading = showLoading;
+    window.updateStreetStatusOnMap = updateStreetStatusOnMap;
 }
 
 // Ініціалізація після завантаження DOM
@@ -316,34 +336,4 @@ if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initApi);
 } else {
     initApi();
-}
-
-function initApi() {
-    console.log('API модуль ініціалізовано');
-    
-    // Отримуємо посилання на функції з map.js
-    if (typeof window.getStreetStyle === 'function') {
-        getStreetStyle = window.getStreetStyle;
-    }
-    
-    if (typeof window.streetsLayer !== 'undefined') {
-        streetsLayer = window.streetsLayer;
-    }
-    
-    // Оновлюємо посилання кожні 500мс, поки не отримаємо
-    if (!getStreetStyle || !streetsLayer) {
-        const checkInterval = setInterval(() => {
-            if (typeof window.getStreetStyle === 'function') {
-                getStreetStyle = window.getStreetStyle;
-            }
-            if (typeof window.streetsLayer !== 'undefined') {
-                streetsLayer = window.streetsLayer;
-            }
-            
-            if (getStreetStyle && streetsLayer) {
-                clearInterval(checkInterval);
-                console.log('Функції карти успішно отримано');
-            }
-        }, 500);
-    }
 }
