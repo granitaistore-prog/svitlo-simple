@@ -2,46 +2,48 @@
 async function loadBuildingsData() {
     try {
         showLoading(true);
+        console.log('Початок завантаження даних будинків...');
         
-        // Відкриваємо JSON файл з даними будинків
-        const response = await fetch('data/baranivka-buildings-simple.json');
+        // Завантажуємо GeoJSON з будинками
+        const response = await fetch('data/baranivka-buildings.json');
         
         if (!response.ok) {
             throw new Error(`Помилка завантаження: ${response.status}`);
         }
         
-        const data = await response.json();
+        const geojsonData = await response.json();
         
-        // Додаємо будинки на карту
-        buildingsLayer.addData(data);
-        
-        // Центруємо карту на будинках
-        const bounds = buildingsLayer.getBounds();
-        if (bounds.isValid()) {
-            map.fitBounds(bounds, { padding: [50, 50] });
+        // Перевіряємо структуру даних
+        if (!geojsonData || !geojsonData.features || !Array.isArray(geojsonData.features)) {
+            throw new Error('Невірний формат GeoJSON даних');
         }
         
-        console.log(`Завантажено ${data.features.length} будинків`);
+        console.log(`Завантажено ${geojsonData.features.length} будинків`);
+        
+        // Додаємо будинки на карту
+        if (typeof loadBuildingsToMap === 'function') {
+            loadBuildingsToMap(geojsonData);
+        } else {
+            console.error('Функція loadBuildingsToMap не знайдена');
+        }
+        
+        showLoading(false);
         
     } catch (error) {
         console.error('Помилка завантаження даних будинків:', error);
-        alert('Не вдалося завантажити дані будинків. Спробуйте оновити сторінку.');
-    } finally {
         showLoading(false);
-    }
-}
-
-// Завантажити дані після ініціалізації карти
-document.addEventListener('DOMContentLoaded', function() {
-    // Чекаємо ініціалізації карти
-    setTimeout(() => {
-        if (map) {
-            loadBuildingsData();
+        
+        // Показуємо помилку користувачу
+        const infoContent = document.querySelector('.info-content');
+        if (infoContent) {
+            infoContent.innerHTML = `
+                <div class="error-message">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h4>Помилка завантаження даних</h4>
+                    <p>${error.message}</p>
+                    <p>Перевірте файл data/baranivka-buildings.json</p>
+                </div>
+            `;
         }
-    }, 100);
-});
-
-// Експортуємо для використання в інших файлах
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { loadBuildingsData };
+    }
 }
