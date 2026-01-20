@@ -172,8 +172,42 @@ function onEachStreetFeature(feature, layer) {
             });
             
             // Показуємо інформацію про вулицю
-            if (typeof showStreetInfo === 'function') {
-                showStreetInfo(feature);
+            try {
+                if (typeof showStreetInfo === 'function') {
+                    showStreetInfo(feature);
+                } else {
+                    console.error('Функція showStreetInfo не знайдена');
+                    // Показати базову інформацію
+                    const infoContent = document.querySelector('.info-content');
+                    if (infoContent) {
+                        infoContent.innerHTML = `
+                            <div class="street-name">
+                                <i class="fas fa-road"></i> ${streetName}
+                            </div>
+                            <div class="info-item">
+                                <strong><i class="fas fa-info-circle"></i> Інформація</strong>
+                                <div class="value">Натисніть на вулицю для отримання інформації про відключення</div>
+                            </div>
+                            <div class="info-note">
+                                <i class="fas fa-info-circle"></i> 
+                                API модуль тимчасово недоступний
+                            </div>
+                        `;
+                    }
+                }
+            } catch (error) {
+                console.error('Помилка при показі інформації про вулицю:', error);
+                const infoContent = document.querySelector('.info-content');
+                if (infoContent) {
+                    infoContent.innerHTML = `
+                        <div class="error-message">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <h4>Помилка</h4>
+                            <p>Не вдалося отримати інформацію про вулицю</p>
+                            <p>${error.message}</p>
+                        </div>
+                    `;
+                }
             }
         }
     });
@@ -233,6 +267,12 @@ function loadStreetsToMap(geojsonData) {
         const loadingEl = document.getElementById('loading');
         if (loadingEl) {
             loadingEl.style.display = 'none';
+        }
+        
+        // Очищуємо панель інформації від попередніх помилок
+        const infoContent = document.querySelector('.info-content');
+        if (infoContent && infoContent.querySelector('.error-message')) {
+            infoContent.innerHTML = '<p class="placeholder">Оберіть вулицю на карті</p>';
         }
         
         return true;
