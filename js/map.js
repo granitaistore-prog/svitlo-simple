@@ -1,59 +1,6 @@
 // Глобальні змінні
 let map;
-let streetsLayer;
-
-// Ініціалізація карти
-function initMap() {
-    console.log('Ініціалізація карти...');
-    
-    try {
-        // Центр Баранівки
-        const baranivkaCenter = [50.297, 27.662];
-        
-        // Перевірка чи існує контейнер для карти
-        const mapContainer = document.getElementById('map');
-        if (!mapContainer) {
-            throw new Error('Контейнер карти не знайдено!');
-        }
-        
-        // Ініціалізація карти
-        map = L.map('map').setView(baranivkaCenter, 14);
-        
-        // Додаємо тайли OpenStreetMap
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-            maxZoom: 19
-        }).addTo(map);
-        
-        // Додаємо контроль масштабу
-        L.control.scale().addTo(map);
-        
-        console.log('Карта успішно ініціалізована');
-        
-        // Створюємо шар для вулиць
-        streetsLayer = L.geoJSON(null, {
-            style: getStreetStyle,
-            onEachFeature: onEachStreetFeature
-        }).addTo(map);
-        
-        console.log('Шар для вулиць створено');
-        
-        // Робимо глобально доступним для інших файлів
-        window.streetsLayer = streetsLayer;
-        window.getStreetStyle = getStreetStyle;
-        
-        // Після ініціалізації карти завантажуємо вулиці
-        if (typeof loadStreetsData === 'function') {
-            setTimeout(loadStreetsData, 500);
-        } else {
-            console.error('Функція loadStreetsData не знайдена!');
-        }
-        
-    } catch (error) {
-        console.error('Помилка ініціалізації карти:', error);
-        alert('Помилка завантаження карти: ' + error.message);
-    }
-}
+let streetsLayer = null;
 
 // Стиль для вулиці за статусом
 function getStreetStyle(feature) {
@@ -88,6 +35,83 @@ function getStreetStyle(feature) {
     };
 }
 
+// Ініціалізація карти
+function initMap() {
+    console.log('Ініціалізація карти...');
+    
+    try {
+        // Перевірка чи існує контейнер для карти
+        const mapContainer = document.getElementById('map');
+        if (!mapContainer) {
+            throw new Error('Контейнер карти не знайдено!');
+        }
+        
+        // Центр Баранівки
+        const baranivkaCenter = [50.297, 27.662];
+        
+        // Ініціалізація карти
+        map = L.map('map').setView(baranivkaCenter, 14);
+        
+        // Додаємо тайли OpenStreetMap
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+            maxZoom: 19
+        }).addTo(map);
+        
+        // Додаємо контроль масштабу
+        L.control.scale().addTo(map);
+        
+        console.log('Карта успішно ініціалізована');
+        
+        // Створюємо шар для вулиць
+        streetsLayer = L.geoJSON(null, {
+            style: getStreetStyle,
+            onEachFeature: onEachStreetFeature
+        }).addTo(map);
+        
+        console.log('Шар для вулиць створено');
+        
+        // Робимо глобально доступним для інших файлів
+        window.streetsLayer = streetsLayer;
+        window.getStreetStyle = getStreetStyle;
+        
+        // Завантажуємо вулиці
+        setTimeout(function() {
+            if (typeof loadStreetsData === 'function') {
+                loadStreetsData();
+            } else {
+                console.error('Функція loadStreetsData не знайдена!');
+                showErrorMessage('Помилка завантаження даних вулиць');
+            }
+        }, 500);
+        
+    } catch (error) {
+        console.error('Помилка ініціалізації карти:', error);
+        showErrorMessage('Помилка завантаження карти: ' + error.message);
+    }
+}
+
+// Показати повідомлення про помилку
+function showErrorMessage(message) {
+    const infoContent = document.querySelector('.info-content');
+    if (infoContent) {
+        infoContent.innerHTML = `
+            <div class="error-message">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h4>Помилка</h4>
+                <p>${message}</p>
+                <p>Будь ласка, перезавантажте сторінку</p>
+            </div>
+        `;
+    }
+    
+    // Приховуємо індикатор завантаження
+    const loadingEl = document.getElementById('loading');
+    if (loadingEl) {
+        loadingEl.style.display = 'none';
+    }
+}
+
 // Обробка кліку на вулицю
 function onEachStreetFeature(feature, layer) {
     if (!feature.properties) return;
@@ -119,10 +143,12 @@ function onEachStreetFeature(feature, layer) {
         },
         click: function(e) {
             // Скидаємо виділення всіх вулиць
-            streetsLayer.eachLayer(function(streetLayer) {
-                streetLayer.isSelected = false;
-                streetLayer.setStyle(getStreetStyle(streetLayer.feature));
-            });
+            if (streetsLayer) {
+                streetsLayer.eachLayer(function(streetLayer) {
+                    streetLayer.isSelected = false;
+                    streetLayer.setStyle(getStreetStyle(streetLayer.feature));
+                });
+            }
             
             // Виділяємо обрану вулицю
             this.isSelected = true;
@@ -145,7 +171,7 @@ function onEachStreetFeature(feature, layer) {
 function loadStreetsToMap(geojsonData) {
     if (!streetsLayer || !map) {
         console.error('Карта або шар вулиць не ініціалізовані');
-        return;
+        return false;
     }
     
     if (geojsonData && geojsonData.features && geojsonData.features.length > 0) {
@@ -173,12 +199,16 @@ function loadStreetsToMap(geojsonData) {
         console.log(`Успішно додано ${geojsonData.features.length} вулиць`);
         
         // Приховуємо індикатор завантаження
-        if (typeof showLoading === 'function') {
-            showLoading(false);
+        const loadingEl = document.getElementById('loading');
+        if (loadingEl) {
+            loadingEl.style.display = 'none';
         }
         
+        return true;
     } else {
         console.error('Немає даних вулиць для відображення');
+        showErrorMessage('Немає даних вулиць для відображення');
+        return false;
     }
 }
 
@@ -212,3 +242,4 @@ function formatStreetName(name) {
 window.initMap = initMap;
 window.loadStreetsToMap = loadStreetsToMap;
 window.formatStreetName = formatStreetName;
+window.showErrorMessage = showErrorMessage;
