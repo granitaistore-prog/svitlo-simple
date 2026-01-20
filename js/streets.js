@@ -4,12 +4,13 @@ async function loadStreetsData() {
     
     try {
         // Показуємо завантаження
-        if (typeof showLoading === 'function') {
-            showLoading(true);
+        const loadingEl = document.getElementById('loading');
+        if (loadingEl) {
+            loadingEl.style.display = 'flex';
         }
         
         // Завантажуємо GeoJSON з вулицями
-        const response = await fetch('data/baranivka-streets.json');
+        const response = await fetch('baranivka-streets.json');
         
         if (!response.ok) {
             throw new Error(`Помилка завантаження: ${response.status} ${response.statusText}`);
@@ -26,7 +27,10 @@ async function loadStreetsData() {
         
         // Додаємо вулиці на карту
         if (typeof loadStreetsToMap === 'function') {
-            loadStreetsToMap(geojsonData);
+            const success = loadStreetsToMap(geojsonData);
+            if (!success) {
+                throw new Error('Не вдалося завантажити вулиці на карту');
+            }
         } else {
             console.error('Функція loadStreetsToMap не знайдена');
             throw new Error('Функція завантаження на карту не доступна');
@@ -36,21 +40,14 @@ async function loadStreetsData() {
         console.error('Помилка завантаження даних вулиць:', error);
         
         // Показуємо помилку користувачу
-        const infoContent = document.querySelector('.info-content');
-        if (infoContent) {
-            infoContent.innerHTML = `
-                <div class="error-message">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <h4>Помилка завантаження даних</h4>
-                    <p>${error.message}</p>
-                    <p>Перевірте консоль для деталей</p>
-                </div>
-            `;
+        if (typeof showErrorMessage === 'function') {
+            showErrorMessage('Помилка завантаження даних вулиць: ' + error.message);
         }
         
         // Приховуємо індикатор завантаження
-        if (typeof showLoading === 'function') {
-            showLoading(false);
+        const loadingEl = document.getElementById('loading');
+        if (loadingEl) {
+            loadingEl.style.display = 'none';
         }
     }
 }
